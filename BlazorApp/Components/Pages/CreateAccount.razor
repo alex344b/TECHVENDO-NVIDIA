@@ -1,0 +1,229 @@
+﻿@page "/createaccount"
+@using Npgsql;
+@inject NavigationManager NavigationManager
+@inject LoginService LoginService
+
+<PageTitle>TechVendo</PageTitle>
+
+<body>
+</body>
+
+<div class="container">
+    <h1 class="createTitle">CREATE ACCOUNT</h1>
+    <div class="FirstAndLastName">
+        <input class="firstname" @bind="Firstname" placeholder="Enter Firstname..." />
+        <input class="lastname" @bind="Lastname" placeholder="Enter Lastname..." />
+        <input class="phonenumber" @bind="Phonenumber" placeholder="Enter Phonenumber..." />
+    </div>
+
+    <div class="PassMail">
+        <input class="email" @bind="Email" placeholder="Enter Email..." />
+        <input class="password" @bind="Password" placeholder="Enter Password..." type="password" />
+    </div>
+    <div class="BirthdateLocation">
+        <input class="birthMonth" @bind="BirthDay" placeholder="Day" maxlength="2" size="2" />
+        <input class="birthMonth" @bind="BirthMonth" placeholder="Month" maxlength="2" size="2" />
+        <input class="birthYear" @bind="BirthYear" placeholder="Year" maxlength="4" size="4" />
+        <input class="location" @bind="Location" placeholder="Enter City..." />
+    </div>
+    <label class="Tos">
+        Accept Terms of Service
+        <input type="checkbox" />
+        <span class="checkmark"></span>
+    </label>
+    <button class="create-btn" @onclick="Create">Create</button>
+</div>
+
+<style>
+    body {
+        background-image: url(/images/download.jpg);
+        background-repeat: no-repeat;
+        margin: 0;
+        padding: 0;
+        background-size: cover;
+    }
+</style>
+
+
+@if (showEmptyNotification)
+{
+    <div class="alert"> *Not all input fields are filled out* </div>
+    <div class="success"></div>
+}
+
+@if (accountCreated)
+{
+    <div class="alert"></div>
+    <div class="success"> Account created! </div>
+}
+
+@if (accountCreated)
+{
+    Thread.Sleep(450);
+    LoginService.NavigateToLogin("/");
+}
+
+@if (accountNotCreated)
+{
+    <div class="alert"> *An Error Occurred. Account not created!* </div>
+    <div class="success"></div>
+
+}
+
+@if (emailExists)
+{
+    <div class="alert"> *The chosen email is already used* </div>
+}
+
+
+@code {
+    private string Firstname;
+    private string Lastname;
+    private string Phonenumber;
+    private string BirthDay;
+    private string BirthMonth;
+    private string BirthYear;
+    private string Location;
+    private string Email;
+    private string Password;
+    private bool AcceptTos;
+
+    private bool showEmptyNotification = false;
+    private bool accountCreated = false;
+    private bool accountNotCreated = false;
+    private bool emailExists = false;
+
+    private List<string> inputFields = new List<string>();
+
+    private string JoinedDate { get; set; }
+
+    private string connectionString = "Host=ep-purple-star-a20n8auz.eu-central-1.aws.neon.tech;Port=5432;Username=techvendo69;Password=qVyZgOJ36HtK;Database=TechVendo;SslMode=Require;";
+
+    private NpgsqlConnection connection;
+
+    protected override void OnInitialized()
+    {
+        base.OnInitialized();
+
+    }
+
+    private void Create()
+    {
+        inputFields.Clear();
+        inputFields.Add(Firstname);
+        inputFields.Add(Lastname);
+        inputFields.Add(Phonenumber);
+        inputFields.Add(BirthDay);
+        inputFields.Add(BirthMonth);
+        inputFields.Add(BirthYear);
+        inputFields.Add(Location);
+        inputFields.Add(Email);
+        inputFields.Add(Password);
+
+        showEmptyNotification = false;
+        connection = new NpgsqlConnection(connectionString);
+        JoinedDate = DateTime.Now.ToString("yyyy-MM-dd");
+
+        foreach (string inputField in inputFields)
+        {
+            if (!string.IsNullOrEmpty(inputField))
+            {
+                continue;
+            }
+            else
+            {
+                notifyEmpty();
+                return;
+            }
+        }
+        try
+        {
+            connection.Open();
+
+            emailExists = CheckAccountExists();
+
+            if (emailExists)
+            {
+                return;
+            }
+
+            string InsertSQL = $"INSERT INTO userprofiles (firstname, lastname, birthdate, reputation, email, password, phonenumber, termsofservice, location, joined, description) VALUES ('{Firstname}', '{Lastname}', '{BirthYear}-{BirthMonth}-{BirthDay}', '0', '{Email}',  crypt('{Password}', gen_salt('bf')), {Phonenumber}, {AcceptTos.ToString()}, '{Location}', '{JoinedDate}', '')";
+
+            using (NpgsqlCommand command = new NpgsqlCommand(InsertSQL, connection))
+            {
+                command.ExecuteNonQuery();
+            }
+
+            Thread.Sleep(20);
+            accountCreated = CheckAccountCreated();
+        }
+        catch
+        {
+
+        }
+    }
+
+    private bool checkEmpty(string inputField)
+    {
+        if (!string.IsNullOrEmpty(inputField.Trim()))
+        {
+            return true;
+
+        }
+        else
+        {
+            return false;
+        }
+    }
+
+    private bool CheckAccountCreated()
+    {
+        string confirmationSQL = $"SELECT * FROM userprofiles WHERE email = '{Email}'";
+        using (NpgsqlCommand command = new NpgsqlCommand(confirmationSQL, connection))
+        {
+            using (NpgsqlDataReader reader = command.ExecuteReader())
+            {
+                while (reader.Read())
+                {
+                    string email = reader["email"].ToString();
+
+                    if (email == Email)
+                    {
+                        return true;
+                    }
+                }
+            }
+        }
+        accountNotCreated = true;
+        return false;
+    }
+
+    private bool CheckAccountExists()
+    {
+        string confirmationSQL = $"SELECT * FROM userprofiles WHERE email = '{Email}'";
+        using (NpgsqlCommand command = new NpgsqlCommand(confirmationSQL, connection))
+        {
+            using (NpgsqlDataReader reader = command.ExecuteReader())
+            {
+                while (reader.Read())
+                {
+                    string email = reader["email"].ToString();
+
+                    if (email == Email)
+                    {
+                        return true;
+                    }
+                }
+            }
+        }
+        return false;
+    }
+
+    private void notifyEmpty()
+    {
+        showEmptyNotification = true;
+    }
+}
+
+
+

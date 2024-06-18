@@ -1,0 +1,40 @@
+﻿@using ProductClassLibrary
+
+<div class="arrow-box">
+    <div class="arrow"></div>
+    <div class="card-box">
+        <h1>@SellingProduct.Series @SellingProduct.Model - @SellingProduct.Price$ </h1>
+    </div>
+</div>
+
+<style>
+    .arrow-box {
+        display: flex;
+        align-items: center;
+    }
+
+    .arrow {
+        width: 0;
+        height: 0;
+        border-top: 20px solid transparent;
+        border-bottom: 20px solid transparent;
+        border-right: 20px solid #919191;
+    }
+
+    .card-box {
+        padding: 10px;
+        background-color: #595959;
+        border-radius: 5%;
+    }
+
+    h1 {
+        font-size: 20px;
+        margin: 0;
+        color: white;
+    }
+
+</style>
+
+@code {
+    [Parameter] public ProductClass SellingProduct { get; set; }
+}

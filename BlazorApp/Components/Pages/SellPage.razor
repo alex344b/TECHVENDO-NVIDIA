@@ -1,0 +1,456 @@
+﻿@page "/products/sellpage"
+@using Npgsql
+@inject LoginState LoginInfo
+@inject LoginService LoginService
+
+<body style="background-color: #3E3E3E;">
+    <div class="d-flex justify-content-center flex-column align-items-center" style="height: 100vh;">
+        <h3 class="text-center mb-3" style="color: white; font-weight: bold;">Choose A Product to sell</h3>
+        <select class="form-control" style="width: 300px; color: white; font-weight: bold; background-color: #6c757d;" @bind="selectedProductType">
+            <option value="None">Choose product</option>
+            <option value="CPU">CPU/Processor</option>
+            <option value="GPU">Graphics Card/GPU</option>
+            <option value="RAM">RAM</option>
+        </select>
+    </div>
+
+    @if (!string.IsNullOrEmpty(successMessage))
+    {
+        <div class="modal" tabindex="-1" style="display:block;" id="successModal">
+            <div class="modal-dialog">
+                <div class="modal-content" style="background-color: #282829;">
+                    <div class="modal-header">
+                        <h5 class="modal-title" style="color: #4caf50;">Success</h5>
+                        <button type="button" class="btn-close" @onclick="CloseModal"></button>
+                    </div>
+                    <div class="modal-body">
+                        <p style="color: #4caf50;">@successMessage</p>
+                    </div>
+                    <div class="modal-footer">
+                        <button type="button" class="btn btn-secondary" @onclick="CloseModal">Close</button>
+                    </div>
+                </div>
+            </div>
+        </div>
+    }
+
+
+</body>
+    
+
+    <div class="sell-forms">
+    @if (selectedProductType == ProductType.CPU)
+    {
+        <div class="modal" tabindex="-1" style="display:block;" id="cpuModal">
+            <div class="modal-dialog">
+                <div class="modal-content" style="background-color: #282829;">
+                    <div class="modal-header">
+                        <h5 class="modal-title" style="color: white;">Sell CPU</h5>
+                        <button type="button" class="btn-close" @onclick="CloseCPUModal"></button>
+                    </div>
+                    <div class="modal-body">
+                        <div>
+                            <label class="white-label">Brand: </label>
+                            <select class="dropdown-brand input-after-label" @bind="brand">
+                                <option value="">-- Select --</option>
+                                <option value="Intel">Intel</option>
+                                <option value="AMD">AMD</option>
+                                <option value="Other">Other</option>
+                            </select>
+                        </div>
+             <div>
+                <label class="white-label">Series: </label>
+                <input class="input-after-label" type="text" @bind="series" />
+            </div>
+            <div>
+                <label class="white-label">Model: </label>
+                <input class="input-after-label" type="text" @bind="model" />
+            </div>
+            <div>
+                <label class="white-label">Product Type: </label>
+                <input class="input-after-label" type="text" @bind="selectedProductType" disabled />
+            </div>
+            <div>
+                <label class="white-label">Price: </label>
+                <input class="input-after-label" type="number" @bind="price" />
+            </div>
+            <div>
+                <label class="white-label">Cores: </label>
+                <input class="input-after-label" type="number" @bind="cores" />
+            </div>
+            <div>
+                <label class="white-label">Threads: </label>
+                <input class="input-after-label" type="number" @bind="threads" />
+            </div>
+            <div>
+                <label class="white-label">Idle Clock Speed: </label>
+                <input class="input-after-label" type="text" @bind="idle_clock_speed" />
+            </div>
+            <div>
+                <label class="white-label">Max Clock Speed: </label>
+                <input class="input-after-label" type="text" @bind="max_clock_speed" />
+            </div>
+            <div>
+                <label class="white-label">Cache: </label>
+                <input class="input-after-label" type="text" @bind="cache" />
+            </div>
+            <div>
+                <label class="white-label">Description: </label>
+                <input class="input-after-label" type="text" @bind="description" />
+            </div>
+                    </div>
+                    <div class="modal-footer">
+                        <button type="button" class="btn btn-secondary" @onclick="CloseCPUModal">Close</button>
+                        <button type="button" class="btn btn-primary" @onclick="SellProduct">Sell Product</button>
+                    </div>
+                </div>
+            </div>
+        </div>
+    }
+
+    @if (selectedProductType == ProductType.GPU)
+    {
+        <div class="modal" tabindex="-1" style="display:block;" id="gpuModal">
+            <div class="modal-dialog">
+                <div class="modal-content" style="background-color: #282829;">
+                    <div class="modal-header">
+                        <h5 class="modal-title" style="color: white;">Sell GPU</h5>
+                        <button type="button" class="btn-close" @onclick="CloseGPUModal"></button>
+                    </div>
+                    <div class="modal-body">
+                        <div>
+                            <label class="white-label">Brand: </label>
+                            <select class="dropdown-brand input-after-label" @bind="brand">
+                                <option value="">-- Select --</option>
+                                <option value="NVIDIA">NVIDIA</option>
+                                <option value="Asus">Asus</option>
+                                <option value="MSI">MSI</option>
+                                <option value="PNY">PNY</option>
+                                <option value="AMD">AMD</option>
+                                <option value="Gigabyte">Gigabyte</option>
+                                <option value="Zotac">Zotac</option>
+                                <option value="Other">Other</option>
+                            </select>
+                        </div>
+                        <div>
+                            <label class="white-label">Series: </label>
+                            <input class="input-after-label" type="text" @bind="series" />
+                        </div>
+                        <div>
+                            <label class="white-label">Model: </label>
+                            <input class="input-after-label" type="text" @bind="model" />
+                        </div>
+                        <div>
+                            <label class="white-label">Product Type: </label>
+                            <input class="input-after-label" type="text" @bind="selectedProductType" disabled />
+                        </div>
+                        <div>
+                            <label class="white-label">Price: </label>
+                            <input class="input-after-label" type="number" @bind="price" />
+                        </div>
+                        <div>
+                            <label class="white-label">VRAM: </label>
+                            <input class="input-after-label" type="text" @bind="vram" />
+                        </div>
+                        <div>
+                            <label class="white-label">Ports: </label>
+                            <input class="input-after-label" type="text" @bind="ports" />
+                        </div>
+                        <div>
+                            <label class="white-label">Description: </label>
+                            <input class="input-after-label" type="text" @bind="description" />
+                        </div>
+                    </div>
+                    <div class="modal-footer">
+                        <button type="button" class="btn btn-secondary" @onclick="CloseGPUModal">Close</button>
+                        <button type="button" class="btn btn-primary" @onclick="SellProduct">Sell Product</button>
+                    </div>
+                </div>
+            </div>
+        </div>
+    }
+
+    @if (selectedProductType == ProductType.RAM)
+    {
+        <div class="modal" tabindex="-1" style="display:block;" id="ramModal">
+            <div class="modal-dialog">
+                <div class="modal-content" style="background-color: #282829;">
+                    <div class="modal-header">
+                        <h5 class="modal-title" style="color: white;">Sell RAM</h5>
+                        <button type="button" class="btn-close" @onclick="CloseRAMModal"></button>
+                    </div>
+                    <div class="modal-body">
+                        <div>
+                            <label class="white-label">Brand: </label>
+                            <select class="dropdown-brand input-after-label" @bind="brand">
+                                <option value="">-- Select --</option>
+                                <option value="Corsair">Corsair</option>
+                                <option value="G.Skill">G.Skill</option>
+                                <option value="Kingston">Kingston</option>
+                                <option value="Crucial">Crucial</option>
+                                <option value="Other">Other</option>
+                            </select>
+                        </div>
+                        <div>
+                            <label class="white-label">Series: </label>
+                            <input class="input-after-label" type="text" @bind="series" />
+                        </div>
+                        <div>
+                            <label class="white-label">Model: </label>
+                            <input class="input-after-label" type="text" @bind="model" />
+                        </div>
+                        <div>
+                            <label class="white-label">Product Type: </label>
+                            <input class="input-after-label" type="text" @bind="selectedProductType" disabled />
+                        </div>
+                        <div>
+                            <label class="white-label">Price: </label>
+                            <input class="input-after-label" type="number" @bind="price" />
+                        </div>
+                        <div>
+                            <label class="white-label">RAM Type: </label>
+                            <select class="ram-type-css" @bind="ramtype">
+                                <option value="">-- Select --</option>
+                                <option value="DDR3">DDR3</option>
+                                <option value="DDR4">DDR4</option>
+                                <option value="DDR5">DDR5</option>
+                                <option value="Other">Other</option>
+                            </select>
+                        </div>
+                        <div>
+                            <label class="white-label">Capacity: </label>
+                            <input class="input-after-label" type="number" @bind="capacity" />
+                        </div>
+                        <div>
+                            <label class="white-label">RAM Speed: </label>
+                            <input class="input-after-label" type="number" @bind="ramspeed" />
+                        </div>
+                        <div>
+                            <label class="white-label">Description: </label>
+                            <input class="input-after-label" type="text" @bind="description" />
+                        </div>
+                    </div>
+                    <div class="modal-footer">
+                        <button type="button" class="btn btn-secondary" @onclick="CloseRAMModal">Close</button>
+                        <button type="button" class="btn btn-primary" @onclick="SellProduct">Sell Product</button>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+    }
+</div>
+
+@code {
+    string product_type;
+    bool showInputFields;
+    bool showGPUFields;                 
+    string brand;
+    string series;
+    string model;
+    decimal price;
+    int vram;               
+    int cores;
+    int threads;
+    string idle_clock_speed;
+    string max_clock_speed;
+    string cache;
+    string description;
+    string ean_number;                 
+    string ports;               
+    string size;               
+    string successMessage;
+    string ramtype;
+    int capacity;
+    int ramspeed;
+    int seller_id;
+    public string ErrorMessage { get; set; }
+
+    enum ProductType
+    {
+        None,
+        CPU,
+        GPU,
+        RAM
+    }
+
+    ProductType selectedProductType = ProductType.None;
+    ProductType currentProductType = ProductType.None;
+
+    void ShowForm(ProductType productType)
+    {
+        currentProductType = productType;
+    }
+
+    void CloseModal()
+    {
+        successMessage = string.Empty;
+    }
+
+    void CloseCPUModal()
+    {
+        selectedProductType = ProductType.None;
+    }
+
+    void CloseGPUModal()
+    {
+        selectedProductType = ProductType.None;
+    }
+    void CloseRAMModal()
+    {
+        selectedProductType = ProductType.None;
+    }
+ 
+    private void SellProduct()
+    {
+        string connectionString = "Host=ep-purple-star-a20n8auz.eu-central-1.aws.neon.tech;Port=5432;Username=techvendo69;Password=qVyZgOJ36HtK;Database=TechVendo;SslMode=Require;";                
+
+        product_type = selectedProductType.ToString();
+
+        using (var connection = new NpgsqlConnection(connectionString))
+        {
+            connection.Open();
+
+            string sql = string.Empty;
+            if (product_type == "CPU")
+            {
+                sql = $"INSERT INTO products (brand, series, model, product_type, price, cores, threads, idle_clock_speed, max_clock_speed, cache, description, seller_id) VALUES ('{brand}', '{series}', '{model.ToUpper()}', '{product_type}', {price}, {cores}, {threads}, '{idle_clock_speed}', '{max_clock_speed}', '{cache}', '{description}', {LoginInfo.ProfileId})";
+            }
+            else if (product_type == "GPU")
+            {
+                sql = $"INSERT INTO products (brand, series, model, product_type, price, vram, ports, description, seller_id) VALUES ('{brand}', '{series}', '{model.ToUpper()}', '{product_type}', {price}, '{vram}', '{ports}', '{description}', {LoginInfo.ProfileId})";
+            }
+            else if (product_type == "RAM")
+            {
+                sql = $"INSERT INTO products (brand, series, model, product_type, price, ramtype, capacity, ramspeed, description, seller_id) VALUES ('{brand}', '{series}', '{model.ToUpper()}', '{product_type}', {price}, '{ramtype}', {capacity}, {ramspeed}, '{description}', {LoginInfo.ProfileId})";
+
+            }
+            else
+            if (product_type != "CPU" && product_type != "GPU" && product_type != "RAM")
+    {
+        ErrorMessage = "Please fill out all fields.";
+        return;
+    }
+
+            using (var command = new NpgsqlCommand(sql, connection))
+            {
+                command.Parameters.AddWithValue("@ProfileId", LoginInfo.ProfileId);
+                command.Parameters.AddWithValue("@Brand", brand);
+                command.Parameters.AddWithValue("@Series", series);
+                command.Parameters.AddWithValue("@Model", model);
+                command.Parameters.AddWithValue("@SelectedProduct", selectedProductType.ToString());
+                command.Parameters.AddWithValue("@Price", price);
+
+                if (product_type == "CPU")
+                {
+                    command.Parameters.AddWithValue("@Cores", cores);
+                    command.Parameters.AddWithValue("@Threads", threads);
+                    command.Parameters.AddWithValue("@idle_clock_speed", idle_clock_speed);
+                    command.Parameters.AddWithValue("@Max_clock_speed", max_clock_speed);
+                    command.Parameters.AddWithValue("@Cache", cache);
+                    command.Parameters.AddWithValue("@Description", description);
+                }
+                else if (product_type == "GPU")
+                {
+                    command.Parameters.AddWithValue("@VRAM", vram);
+                    command.Parameters.AddWithValue("@Ports", ports);
+                    command.Parameters.AddWithValue("@Description", description);
+                }
+                else if (product_type == "RAM")
+                {
+                    command.Parameters.AddWithValue("@Ramtype", ramtype);
+                    command.Parameters.AddWithValue("@Capacity", capacity);
+                    command.Parameters.AddWithValue("@Ramspeed", ramspeed);
+                    command.Parameters.AddWithValue("@Description", description);
+                }
+
+                command.ExecuteNonQuery();
+            }
+
+            if (selectedProductType == ProductType.CPU)
+            {
+                CloseCPUModal();
+            }
+            else if (selectedProductType == ProductType.GPU)
+            {
+                CloseGPUModal();
+            }
+            else if (selectedProductType == ProductType.RAM)
+            {
+                CloseRAMModal();
+            }
+
+
+            showInputFields = false;                
+            showGPUFields = false;                
+            successMessage = "Product successfully added!";                
+        }
+    }
+}
+
+<style>
+    .form-grid {
+        display: grid;
+        color: white;
+        grid-template-columns: repeat(4, 1fr);
+        gap: 10px;         
+        background-color: #4d4d4d;         
+        padding: 20px;         
+        flex-direction: column;
+    }
+
+    .sell-btn {
+        background-color: #226990;
+        color: white;
+        border-radius: 10px;         
+        padding: 10px 20px;         
+        border: none;
+        cursor: pointer;
+        text-align: center;
+    }
+
+    input {
+        background-color: #6c757d;
+        color: white;
+        border: none;
+        border-radius: 5px;
+        padding: 5px;
+    }
+
+    .dropdown-brand  {
+        background-color: #6c757d;
+        color: white;
+        border: none;
+        border-radius: 5px;
+        padding: 5px;
+    }
+
+    .ram-type-css {
+        background-color: #6c757d;
+        color: white;
+        border: none;
+        border-radius: 5px;
+        padding: 5px;
+    }
+
+    .sellbtn {
+        display: flex;
+        justify-content: center;
+        align-items: center;
+        padding: 25px 45px;
+    }
+
+    .sell-forms {
+        background-color: #4d4d4d;
+    }
+
+    .white-label {
+    color: white;
+    font-size: 1.5rem;
+}
+
+.input-after-label {
+    display: inline-block;
+}
+
+</style>

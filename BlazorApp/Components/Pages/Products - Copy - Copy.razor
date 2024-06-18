@@ -1,0 +1,538 @@
+﻿@page "/productstest/nvidia"
+@using Npgsql
+@using ProductClassLibrary
+@using ProductClassLibrary.Products
+@inject NavigationManager NavigationManager
+@inject LoginState LoginInfo
+@inject LoginService LoginService
+@inject IJSRuntime JS
+
+<PageTitle>Products</PageTitle>
+
+@code {
+    private bool isLoaded = false;
+
+    protected override void OnAfterRender(bool firstRender)
+    {
+        if (firstRender)
+        {
+            isLoaded = true;
+            StateHasChanged();
+        }
+    }
+}
+<body>
+    <div class="wrapper">
+        <div class="header" style="padding: 0;">
+            <img src="/images/laptop.jpg" class="background">
+            <h1 class="title" style="background-image: url('images/Billede1.png')"></h1>
+            <div>
+                <div class="canvas-container" style="color: black;">
+                    <canvas id="threeCanvas" width="800" height="600"></canvas>
+                </div>
+           </div>
+
+ @code {
+    private ElementReference _canvasRef;
+
+    [Inject]
+    private IJSRuntime JSRuntime { get; set; }
+
+    protected override async Task OnAfterRenderAsync(bool firstRender)
+    {
+        if (firstRender)
+        {
+            await JSRuntime.InvokeVoidAsync("threeInterop.initialize", "threeCanvas");
+        }
+    }
+}
+        </div>
+        <section class="transparent-bg" style="opacity:0;">
+            <p>s</p>
+            <p>s</p>
+            <p>s</p>
+            <p>s</p>
+            <p>s</p>
+            <p>s</p>
+            <p>s</p>
+            <p>s</p>
+            <p>s</p>
+            <p>s</p>
+            <p>s</p>
+            <p>s</p>
+        </section>
+
+        <div class="header2">
+            <img src="/images/gpus.jpg" class="nextbackground">
+            <h2 class="title2">GAMEPLAY</h2>
+        </div>
+        <section class="transparent-bg2">
+            <iframe width="850" height="478" src="https://www.youtube.com/embed/QGI8EIgf8Y8" title="Cyberpunk 2077 | 4K DLSS 3.5 Comparison" frameborder="0" allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share" referrerpolicy="strict-origin-when-cross-origin" allowfullscreen></iframe>
+            <p></p>
+
+        </Section>
+        
+        <div class="header3">
+            <img src="/images/chart.svg" class="lastbackground">
+            <h2 class="title3">PERFORMANCE</h2>
+        </div>
+        
+        <section class="section2">
+
+            <div class="container">
+
+                <div class="row row-cols-1 row-cols-sm-2 row-cols-md-3 g-3">
+                    @foreach (var product in productsToShow)
+                    {
+                        <div class="col">
+                            <div class="card shadow-sm">
+                                @switch (product.Product_Type)
+                                {
+                                    case "GPU":
+                                        <img src="..\images\product_16485448943db4ee0d12937fc435d5b5221c968702_grande.webp" class="card-img-top" alt="Product Image">
+                                        break;
+                                }
+                                <div class="card-body">
+                                    <h5 class="card-title">@product.Brand @product.Series</h5>
+                                    <p class="card-text">
+                                        @product.Brand
+                                        @product.Series
+                                        @product.Model
+                                    </p>
+                                    <div class="d-flex justify-content-between align-items-center">
+                                        <div class="btn-group">
+                                            <button type="button" class="btn btn-sm btn-outline-secondary" @onclick="() => OpenModal(product)">View</button>
+                                            <button type="button" class="btn btn-sm btn-outline-secondary">Price: @product.Price $</button>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    }
+                </div>
+            </div>
+        </section>
+
+
+        <div class="footer-section">
+            <div class="footer">
+                <div class="container">
+                    <div class="row">
+                        <div class="col-md-4">
+                            <h5><a href="/aboutus">About Us</a></h5>
+                            <p>
+                                TechVendo is your platform for buying and selling quality used computer hardware with reliable peer-to-peer transactions.
+
+                                Join TechVendo for great deals and connect with other tech enthusiasts.
+                            </p>
+                        </div>
+                        <div class="col-md-4">
+                            <h5>Links</h5>
+                            <ul>
+                                <li><a href="/">Home</a></li>
+                                <li><a href="/products">Products</a></li>
+                                <li><a href="#">Contact Us</a></li>
+                            </ul>
+                        </div>
+                        <div class="col-md-4">
+                            <h5>Contact Us</h5>
+                            <p>H.C Andersensvej, Viborg, Denmark</p>
+                            <p>Email: Techvendo69@gmail.com</p>
+                            <p>Phone: +45 93 70 61 51</p>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+        <section class="bottom-space" style="background-color: black;">
+            <h1 class="title" > </h1>
+        </section>
+    </div>    
+</body>
+
+
+@if (showModal)
+{
+    <div class="modal" tabindex="-1" style="display:block;">
+        <div class="modal-dialog">
+            <div class="modal-content" style="background-color: #282829;">
+                <div class="modal-header">
+                    <h5 class="viewModalTitle">@selectedProduct.Brand @selectedProduct.Series @selectedProduct.Model</h5>
+                    <button type="button" class="btn-close" @onclick="CloseModal"></button>
+                </div>
+
+                <div class="modal-body">
+                    @switch (selectedProduct.Product_Type)
+                    {
+                        case "GPU":
+                            <p class="viewModalText"><strong>Ports:</strong> @selectedProduct.Ports</p>
+                            <p class="viewModalText"><strong>VRAM: </strong> @selectedProduct.VRAM </p>
+                            break;
+
+                        case "CPU":
+                            <p class="viewModalText"><strong>Cores:</strong> @selectedProduct.Cores     </p>
+                            <p class="viewModalText"><strong>Threads: </strong> @selectedProduct.Threads</p>
+                            break;
+
+                        case "RAM":
+                            <p class="viewModalText"><strong>Capacity:</strong> @selectedProduct.Capacity</p>
+                            <p class="viewModalText"><strong>Speed: </strong> @selectedProduct.RamSpeed  </p>
+                            break;
+                    }
+                    <p class="viewModalSeller"> <strong>Seller: </strong> <a @onclick="() => NavigateToSeller(selectedProduct.SellerID)"> @GetSellerName(selectedProduct.SellerID)</a></p>
+                    <p class="viewModalText"><strong>Description: </strong>@selectedProduct.Description</p>
+                </div>
+
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" @onclick="CloseModal">Close</button>
+                </div>
+            </div>
+        </div>
+    </div>
+}
+
+@code {
+    private List<ProductClass> products = new List<ProductClass>();
+    private List<ProductClass> productsToShow = new List<ProductClass>();
+    private List<string> ListedBrands = new List<string>();
+
+    private bool showModal = false;
+
+    private ProductClass selectedProduct = new ProductClass();
+    private string selectedSortOption = "Price";
+    private string selectedTypeOption = "";
+    private string selectedBrandOption = "";
+
+    private bool showNotSignedInMessage = false;
+
+    private System.Timers.Timer redirectTimer;
+
+    private string searchedItem = "";
+
+    private string connectionString = "Host=ep-purple-star-a20n8auz.eu-central-1.aws.neon.tech;Port=5432;Username=techvendo69;Password=qVyZgOJ36HtK;Database=TechVendo;SslMode=Require;";
+    private NpgsqlConnection connection;
+
+    protected override void OnInitialized()
+    {
+        base.OnInitialized();
+        connection = new NpgsqlConnection(connectionString);
+        products = GetProducts("SELECT * FROM products WHERE seller_id = 36");
+    }
+
+
+    void OpenModal(ProductClass product)
+    {
+        selectedProduct = product;
+        showModal = true;
+    }
+
+    void CloseModal()
+    {
+        showModal = false;
+    }
+
+    void NavigateToSeller(int sellerId)
+    {
+        NavigationManager.NavigateTo($"/profileviewer/{sellerId}");
+    }
+
+
+    public List<ProductClass> GetProducts(string inputSQL)
+    {
+        productsToShow.Clear();
+        try
+        {
+            connection.Open();
+
+            using (NpgsqlCommand command = new NpgsqlCommand(inputSQL, connection))
+            {
+                using (NpgsqlDataReader reader = command.ExecuteReader())
+                {
+                    while (reader.Read())
+                    {
+                        var product = new ProductClass
+                            {
+                                Price = (int)reader["price"],
+                                EANNumber = reader["ean_number"].ToString(),
+                                Brand = reader["brand"].ToString(),
+                                Model = reader["model"].ToString(),
+                                Series = reader["series"].ToString(),
+                                Description = reader["description"].ToString(),
+                                Product_Type = reader["product_type"].ToString(),
+                                Ports = reader["ports"].ToString(),
+                                SellerID = (int)reader["seller_id"]
+                            };
+                        switch (product.Product_Type)
+                        {
+                            case "GPU":
+                                product.VRAM = (int)reader["vram"];
+                                break;
+
+                            case "CPU":
+                                product.Cores = (int)reader["cores"];
+                                product.Threads = (int)reader["threads"];
+                                break;
+                            case "RAM":
+                                product.Capacity = (int)reader["capacity"];
+                                product.RamSpeed = (int)reader["ramspeed"];
+                                break;
+                        }
+
+                        products.Add(product);
+                        productsToShow.Add(product);
+                    }
+                }
+            }
+        }
+        catch (Exception ex)
+        {
+            Console.WriteLine($"An error occurred: {ex.Message}");
+        }
+        finally
+        {
+            if (connection.State == System.Data.ConnectionState.Open)
+            {
+                connection.Close();
+            }
+        }
+
+        return products;
+    }
+
+    public string GetSellerName(int sellerId)
+    {
+        string fullName = "";
+
+        try
+        {
+            connection.Open();
+            string SelectSQL = $"SELECT * FROM userprofiles WHERE id = {sellerId}";
+
+            using (NpgsqlCommand command = new NpgsqlCommand(SelectSQL, connection))
+            {
+                using (NpgsqlDataReader reader = command.ExecuteReader())
+                {
+                    while (reader.Read())
+                    {
+                        fullName = $"{(string)reader["firstname"]} {(string)reader["lastname"]}";
+                    }
+                }
+            }
+        }
+        finally
+        {
+            if (connection.State == System.Data.ConnectionState.Open)
+            {
+                connection.Close();
+            }
+        }
+        return fullName;
+    }
+
+}
+
+
+<style>
+    body {
+        margin: 0;
+        overflow-y: hidden;
+        background-color: black;
+        
+    }
+
+    .wrapper {
+
+        height: 100vh;
+        overflow-y: auto;
+        overflow-x: hidden;
+        perspective: 10px;
+        background: linear-gradient(to bottom, transparent, black)
+    }
+
+
+    .header3d{
+        position: relative;
+        display: flex;
+        justify-content: center;
+        align-items: center;
+        height: 100%;
+        transform-style: preserve-3d;
+        z-index: -1;
+    }
+
+    .header3 {
+        position: relative;
+        display: flex;
+        justify-content: center;
+        align-items: center;
+        height: 100%;
+        transform-style: preserve-3d;
+        z-index: -1;
+    }
+
+    .header2 {
+        position: relative;
+        display: flex;
+        justify-content: center;
+        align-items: center;
+        height: 100%;
+        transform-style: preserve-3d;
+        z-index: -1;
+    }
+
+    .header {
+        position: relative;
+        display: flex;
+        justify-content: center;
+        align-items: center;
+        height: 100%;
+        transform-style: preserve-3d;
+        z-index: -1;
+    }
+
+    .background {
+        transform: translateZ(-5px);
+    }
+
+    .nextbackground {
+        transform: translateZ(-5px);
+    }
+
+    .lastbackground {
+        transform: translateZ(-5px);
+    }
+
+    .background {
+        position:absolute;
+        object-fit: cover;
+        z-index: -1;
+        width: 152%;
+    }
+
+    .nextbackground {
+        position: absolute;
+        object-fit: cover; 
+        z-index: -1;
+        width: 160%;
+    }
+
+    .lastbackground {
+        position: absolute;
+        object-fit: cover; 
+        z-index: -1;
+    }
+    
+
+    .title {
+        width:625px;
+        height: 134px; 
+    }
+
+    .title2 {
+        font-size: 7rem;
+        color: white;
+        text-shadow: 0 0 5px black;
+    }
+
+    .title3 {
+        font-size: 7rem;
+        color: white;
+        text-shadow: 0 0 5px black;
+    }
+
+
+    section {
+        font-size: 1.5rem;
+        padding: 1.5rem;
+        background: black;
+        color: white;
+        text-align: center;
+    }
+
+    .section2 {
+        font-size: 1.5rem;
+        padding: 1.5rem;
+        background: black;
+        color: white;
+        text-align: left;
+    }
+
+
+    .transparent-bg {
+        background: rgba(17, 17, 17, 0); /* Semi-transparent background */
+    }
+
+    .transparent-bg2 {
+        background: rgba(17, 17, 17, 0); /* Semi-transparent background */
+    }
+
+    .card-body, .card {
+        background-color: #525050;
+        color: white;
+        padding: 20px 20px;
+        margin-bottom: 20px;
+        border-radius: 10px;
+    }
+
+    .card:hover{
+        transform: scale(1.05);
+        border-width:2px;
+        border-color: #76B900;
+    }
+    .card{
+        transition: transform 0.3s ease-in-out;
+    }
+
+    .card-text{
+        font-size: 1rem;
+    }
+
+    .btn-outline-secondary {
+        background-color: #76B900;
+        border-color: #76B900;
+        color: white;
+        box-shadow: 3px 4px 3px rgba(0, 0, 0, 0.2);
+    }
+    .btn-outline-secondary:hover{
+        background-color: #62A500;
+        border-color: #62A500;
+    }
+
+    .viewModalText {
+        color: white;
+    }
+
+    .viewModalTitle {
+        color: white;
+        font-weight: bold;
+    }
+
+    .viewModalSeller {
+        color: white;
+        text-decoration: underline;
+    }
+
+        .viewModalSeller:hover {
+            cursor: pointer;
+            color: #76B900;
+        }
+
+    .footer {
+        background-color: black;
+        color: #fff;
+        padding: 20px;
+    }
+
+        .footer h5 {
+            margin-bottom: 20px;
+        }
+
+        .footer a {
+            color: #fff;
+            text-decoration: none;
+        }
+
+            .footer a:hover {
+                color: #ccc;
+            }
+</style>

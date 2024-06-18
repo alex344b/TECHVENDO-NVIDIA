@@ -1,0 +1,176 @@
+﻿@page "/aboutus"
+
+<PageTitle>ABOUT US</PageTitle>
+
+
+<body>
+    <div class="wrapper" style="background-color:#111;">
+        <div class="header" style="padding: 0;">
+            <img src="/images/gamingpc.png" class="background">
+            <h1 class="title">ABOUT US</h1>
+        </div>
+        <section class="transparent-bg">
+            At TechVendo, we are passionate about providing a seamless platform for individuals to buy and sell quality used computer hardware. Founded with a vision to revolutionize the way technology enthusiasts interact in the marketplace, we facilitate direct peer-to-peer transactions (C2C) with utmost transparency and reliability.
+            Our mission is to bridge the gap between buyers and sellers, offering a trusted space where both parties can engage in transactions with confidence. Whether you're looking to upgrade your gaming rig, enhance your workstation, or simply declutter your tech collection, TechVendo is your go-to destination.
+            We understand the importance of affordability and sustainability in today's tech landscape. By giving a second life to pre-loved hardware, we contribute to reducing electronic waste and making cutting-edge technology more accessible to everyone.
+            At TechVendo, integrity and customer satisfaction are at the core of everything we do. Our user-friendly platform, coupled with robust security measures, ensures a smooth and secure transaction experience for all our users.
+            Join us in reshaping the future of tech commerce. Discover great deals, unlock hidden treasures, and connect with fellow tech enthusiasts at TechVendo – where every transaction is a win-win for both buyers and sellers alike.
+        </section>
+
+        <div class="header2">
+            <img src="/images/hands.png" class="nextbackground">
+            <h2 class="title2">SUSTAINABILITY</h2>
+        </div>
+        <section class="transparent-bg">
+            Reusability is essential in today's world. It's not just about reducing waste; it's about maximizing the lifespan of products and minimizing our impact on the environment. 
+
+            When we reuse items, we're not only saving money but also conserving resources and energy that would otherwise be spent on manufacturing new products. 
+
+            Plus, reusing things often adds character and history to them, making them more valuable in a sentimental sense. 
+
+            Overall, embracing reusability is a smart and responsible choice that benefits both individuals and the planet.
+            In our homes, adopting practices like upcycling old furniture or repurposing containers for storage can breathe new life into items that might otherwise end up in landfills.
+
+            Similarly, in industries, designing products with reusability in mind can revolutionize manufacturing processes, leading to more sustainable practices and less waste generation.
+
+            , reusability encourages creativity and innovation. It challenges us to think outside the box and find new uses for old things, fostering a culture of resourcefulness and problem-solving.
+
+            By prioritizing reusability, we not only reduce our ecological footprint but also contribute to building a more resilient and sustainable future for generations to come.
+        </Section>
+        
+        <div class="header3">
+            <img src="/images/theteam.png" class="lastbackground">
+            <h2 class="title3">MEAT THE TEAM</h2>
+        </div>
+        <section class="section2">
+            Arian: 
+            At just 17 years old, Arian brings youthful energy and fresh perspectives to our team. As the youngest member, he's not afraid to think outside the box and push boundaries.
+
+            Mathilde: 
+            At 18 years old, Mathilde is the steady hand in our group. As the middle child, he balances innovation with practicality, ensuring our project stays on track and meets its goals.
+
+            Alexander: 
+            At 20 years old, Alexander is the backbone of our team. While he may be labeled "the weak one," don't let that fool you – his determination and skills in software development are invaluable to our project's success.
+        </section>
+        <section>determination and skills in software development are invaluable to our project's success.</section>
+    </div>    
+</body>
+
+
+<style>
+    body {
+        margin: 0;
+        overflow-y: hidden;
+    }
+
+    .wrapper {
+        height: 100vh;
+        overflow-y: auto;
+        overflow-x: hidden;
+        perspective: 10px;
+
+    }
+
+    .header3 {
+        position: relative;
+        display: flex;
+        justify-content: center;
+        align-items: center;
+        height: 100%;
+        transform-style: preserve-3d;
+        z-index: -1;
+    }
+
+    .header2 {
+        position: relative;
+        display: flex;
+        justify-content: center;
+        align-items: center;
+        height: 100%;
+        transform-style: preserve-3d;
+        z-index: -1;
+    }
+
+    .header {
+        position: relative;
+        display: flex;
+        justify-content: center;
+        align-items: center;
+        height: 100%;
+        transform-style: preserve-3d;
+        z-index: -1;
+    }
+
+    .background {
+        transform: translateZ(-5px);
+    }
+
+    .nextbackground {
+        transform: translateZ(-5px);
+    }
+
+    .lastbackground {
+        transform: translateZ(-5px);
+    }
+
+    .background {
+        position:absolute;
+        object-fit: cover;
+        z-index: -1;
+    }
+
+    .nextbackground {
+        position: absolute;
+        object-fit: cover; 
+        z-index: -1;
+    }
+
+    .lastbackground {
+        position: absolute;
+        object-fit: cover; 
+        z-index: -1;
+    }
+    
+    .title {
+        font-size: 7rem;
+        color: white;
+        text-shadow: 0 0 5px black;
+        
+    }
+
+    .title2 {
+        font-size: 7rem;
+        color: white;
+        text-shadow: 0 0 5px black;
+    }
+
+    .title3 {
+        font-size: 7rem;
+        color: white;
+        text-shadow: 0 0 5px black;
+    }
+
+    section {
+        font-size: 1.5rem;
+        padding: 1.5rem;
+        background: #333;
+        color: white;
+        text-align: center;
+    }
+
+    .section2 {
+        font-size: 1.5rem;
+        padding: 1.5rem;
+        background: #333;
+        color: white;
+        text-align: left;
+    }
+    .transparent-bg {
+        background: rgba(17, 17, 17, 0.8); /* Semi-transparent background */
+    }
+
+    .section2{
+        background: rgba(17, 17, 17, 0.8); /* Semi-transparent background */
+
+    }
+</style>

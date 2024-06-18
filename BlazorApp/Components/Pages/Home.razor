@@ -1,0 +1,528 @@
+﻿@page "/"
+@using Npgsql
+@using ProductClassLibrary
+@using ProductClassLibrary.Products
+@inject NavigationManager NavigationManager
+@inject LoginState LoginInfo
+@inject LoginService LoginService
+
+@code {
+    private bool isLoaded = false;
+
+    protected override void OnAfterRender(bool firstRender)
+    {
+        if (firstRender)
+        {
+            isLoaded = true;
+            StateHasChanged();
+        }
+    }
+
+    private bool sortDropdown = false;
+    private bool brandDropdown = false;
+}
+
+
+<div class="hero-content">
+    <h1 class="title-hero @((isLoaded) ? "loaded" : "")">TECHVENDO</h1>
+    <p class="under-hero" style="font-size:20px;"> Nvidia|TechVendo</p>
+    <p class="under-hero">We Chop The Prices!</p>
+
+    <p> </p>
+    <p> </p>
+
+
+    <NavLink class="products-btn" href="/products">
+        Products
+    </NavLink>
+
+    <NavLink class="nvidiaProducts-btn" href="/productstest/nvidia">
+        Nvidia
+    </NavLink>
+
+</div>
+
+<div class="container">
+    <div class="row row-cols-1 row-cols-sm-2 row-cols-md-3 g-3">
+        @foreach (var product in productsToShow)
+        {
+            <div class="col">
+                <div class="card shadow-sm">
+                    @switch (product.Product_Type)
+                    {
+                        case "GPU":
+                            <img src="..\images\product_16485448943db4ee0d12937fc435d5b5221c968702_grande.webp" class="card-img-top" alt="Product Image">
+                            break;
+
+                        case "CPU":
+                            <img src="..\images\amdupscale.png" class="card-img-top" alt="Product Image">
+                            break;
+
+                        case "RAM":
+                            <img src="..\images\gskillram.png" class="card-img-top" alt="Product Image">
+                            break;
+                    }
+                    <div class="card-body">
+                        <h5 class="card-title">@product.Brand @product.Series</h5>
+                        <p class="card-text">
+                            @product.Brand
+                            @product.Series
+                            @product.Model
+                        </p>
+                        <div class="d-flex justify-content-between align-items-center">
+                            <div class="btn-group">
+                                <button type="button" class="btn btn-sm btn-outline-secondary" @onclick="() => OpenModal(product)">View</button>
+                                <button type="button" class="btn btn-sm btn-outline-secondary">Price: @product.Price $</button>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        }
+    </div>
+</div>
+
+@if (showModal)
+{
+    <div class="modal" tabindex="-1" style="display:block;">
+        <div class="modal-dialog">
+            <div class="modal-content" style="background-color: #282829;">
+                <div class="modal-header">
+                    <h5 class="viewModalTitle">@selectedProduct.Brand @selectedProduct.Series @selectedProduct.Model</h5>
+                    <button type="button" class="btn-close" @onclick="CloseModal"></button>
+                </div>
+
+                <div class="modal-body">
+                    @switch (selectedProduct.Product_Type)
+                    {
+                        case "GPU":
+                            <p class="viewModalText"><strong>Ports:</strong> @selectedProduct.Ports</p>
+                            <p class="viewModalText"><strong>VRAM: </strong> @selectedProduct.VRAM </p>
+                            break;
+
+                        case "CPU":
+                            <p class="viewModalText"><strong>Cores:</strong> @selectedProduct.Cores     </p>
+                            <p class="viewModalText"><strong>Threads: </strong> @selectedProduct.Threads</p>
+                            break;
+
+                        case "RAM":
+                            <p class="viewModalText"><strong>Capacity:</strong> @selectedProduct.Capacity</p>
+                            <p class="viewModalText"><strong>Speed: </strong> @selectedProduct.RamSpeed  </p>
+                            break;
+                    }
+                    <p class="viewModalSeller"> <strong>Seller: </strong> <a @onclick="() => NavigateToSeller(selectedProduct.SellerID)"> @GetSellerName(selectedProduct.SellerID)</a></p>
+                    <p class="viewModalText"><strong>Description: </strong>@selectedProduct.Description</p>
+                </div>
+
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" @onclick="CloseModal">Close</button>
+                </div>
+            </div>
+        </div>
+    </div>
+}
+
+@code {
+    private List<ProductClass> products = new List<ProductClass>();
+    private List<ProductClass> productsToShow = new List<ProductClass>();
+    private List<string> ListedBrands = new List<string>();
+
+    private bool showModal = false;
+
+
+    private ProductClass selectedProduct = new ProductClass();
+    private string selectedSortOption = "Price";
+    private string selectedTypeOption = "";
+    private string selectedBrandOption = "";
+
+
+    private System.Timers.Timer redirectTimer;
+
+
+    private string connectionString = "Host=ep-purple-star-a20n8auz.eu-central-1.aws.neon.tech;Port=5432;Username=techvendo69;Password=qVyZgOJ36HtK;Database=TechVendo;SslMode=Require;";
+    private NpgsqlConnection connection;
+
+    protected override void OnInitialized()
+    {
+        base.OnInitialized();
+        connection = new NpgsqlConnection(connectionString);
+        products = GetProducts("SELECT * FROM products WHERE seller_id = 36");
+
+    }
+
+    void OpenModal(ProductClass product)
+    {
+        selectedProduct = product;
+        showModal = true;
+    }
+
+    void CloseModal()
+    {
+        showModal = false;
+    }
+
+
+
+    void NavigateToSeller(int sellerId)
+    {
+        NavigationManager.NavigateTo($"/profileviewer/{sellerId}");
+    }
+
+
+    public List<ProductClass> GetProducts(string inputSQL)
+    {
+        productsToShow.Clear();
+        try
+        {
+            connection.Open();
+
+            using (NpgsqlCommand command = new NpgsqlCommand(inputSQL, connection))
+            {
+                using (NpgsqlDataReader reader = command.ExecuteReader())
+                {
+                    while (reader.Read())
+                    {
+                        var product = new ProductClass
+                            {
+                                Price = (int)reader["price"],
+                                EANNumber = reader["ean_number"].ToString(),
+                                Brand = reader["brand"].ToString(),
+                                Model = reader["model"].ToString(),
+                                Series = reader["series"].ToString(),
+                                Description = reader["description"].ToString(),
+                                Product_Type = reader["product_type"].ToString(),
+                                Ports = reader["ports"].ToString(),
+                                SellerID = (int)reader["seller_id"]
+                            };
+                        switch (product.Product_Type)
+                        {
+                            case "GPU":
+                                product.VRAM = (int)reader["vram"];
+                                break;
+
+                            case "CPU":
+                                product.Cores = (int)reader["cores"];
+                                product.Threads = (int)reader["threads"];
+                                break;
+                            case "RAM":
+                                product.Capacity = (int)reader["capacity"];
+                                product.RamSpeed = (int)reader["ramspeed"];
+                                break;
+                        }
+
+                        products.Add(product);
+                        productsToShow.Add(product);
+                    }
+                }
+            }
+        }
+        catch (Exception ex)
+        {
+            Console.WriteLine($"An error occurred: {ex.Message}");
+        }
+        finally
+        {
+            if (connection.State == System.Data.ConnectionState.Open)
+            {
+                connection.Close();
+            }
+        }
+
+        return products;
+    }
+
+    public string GetSellerName(int sellerId)
+    {
+        string fullName = "";
+
+        try
+        {
+            connection.Open();
+            string SelectSQL = $"SELECT * FROM userprofiles WHERE id = {sellerId}";
+
+            using (NpgsqlCommand command = new NpgsqlCommand(SelectSQL, connection))
+            {
+                using (NpgsqlDataReader reader = command.ExecuteReader())
+                {
+                    while (reader.Read())
+                    {
+                        fullName = $"{(string)reader["firstname"]} {(string)reader["lastname"]}";
+                    }
+                }
+            }
+        }
+        finally
+        {
+            if (connection.State == System.Data.ConnectionState.Open)
+            {
+                connection.Close();
+            }
+        }
+        return fullName;
+    }
+
+
+}
+
+<section>
+    <div class="footer">
+        <div class="container">
+            <div class="row">
+                <div class="col-md-4">
+                    <h5><a href="/aboutus">About Us</a></h5>
+                    <p>
+                        TechVendo is your platform for buying and selling quality used computer hardware with reliable peer-to-peer transactions.
+
+                        Join TechVendo for great deals and connect with other tech enthusiasts.
+                    </p>
+                </div>
+                <div class="col-md-4">
+                    <h5>Links</h5>
+                    <ul>
+                        <li><a href="/">Home</a></li>
+                        <li><a href="/products">Products</a></li>
+                        <li><a href="#">Contact Us</a></li>
+                    </ul>
+                </div>
+                <div class="col-md-4">
+                    <h5>Contact Us</h5>
+                    <p>H.C Andersensvej, Viborg, Denmark</p>
+                    <p>Email: Techvendo69@gmail.com</p>
+                    <p>Phone: +45 93 70 61 51</p>
+                </div>
+            </div>
+        </div>
+    </div>
+</section>
+
+<style>
+
+    body {
+        margin: 0;
+        padding: 0;
+        font-family: Arial, sans-serif;
+        background-color: #000;
+    }
+
+    .hero-content {
+        background-image: linear-gradient(rgba(0, 0, 0, 0.5), rgba(0, 0, 0, 0.5)), url('/images/geforce-rtx-platform-og.jpg');
+        background-size: cover;
+        background-position: center;
+        position: relative;
+        display: flex;
+        align-items: center;
+        height: 100vh;
+        justify-content: center;
+        color: white;
+        flex-direction: column;
+        text-align: center;
+    }
+
+    @@media (max-width: 768px) {
+        .hero-content {
+            height: 50vh;
+        }
+
+            .hero-content h1 {
+                font-size: 24px;
+            }
+
+            .hero-content p {
+                font-size: 12px;
+            }
+    }
+
+    .title-hero {
+        font-size: 64px;
+        font-family: Arial, sans-serif;
+        padding: 10px 20px;
+        font-weight: bold;
+        border: 4px solid transparent;
+        transition: border 1s ease-in-out;
+    }
+
+        .title-hero.loaded {
+            border-color: #698FC0;
+        }
+
+    .hero-content {
+        text-align: center;
+    }
+
+    .under-hero {
+        font-size: 40px;
+        margin-top: 0;
+        padding-top: 0;
+        font-weight: bold;
+    }
+
+    .products-btn {
+        background-color: rgba(0, 0, 0, 0.5);
+        border: 2px solid #fff;
+        font-family: Arial, sans-serif;
+        font-style: italic;
+        font-size: 20px;
+        color: #fff;
+        text-decoration: none;
+        cursor: pointer;
+        transition: all 0.2s ease-in-out;
+        display: inline-block;
+        padding: 15px 30px;
+        border-radius: 20px;
+        width: 300px;
+    }
+
+        .products-btn:hover {
+            color: #000;
+            background-color: #eee;
+            transform: translateY(-3px);
+        }
+
+
+
+    .nvidiaProducts-btn {
+        margin-top: 10px;
+        background-color: rgba(0, 0, 0, 0.5);
+        border: 2px solid #fff;
+        font-family: Arial, sans-serif;
+        font-style: italic;
+        font-size: 20px;
+        color: #fff;
+        text-decoration: none;
+        cursor: pointer;
+        transition: all 0.2s ease-in-out;
+        display: inline-block;
+        padding: 15px 30px;
+        border-radius: 20px;
+        width: 300px;
+    }
+
+        .nvidiaProducts-btn:hover {
+            color: #000;
+            background-color: #76B900;
+            transform: translateY(-3px);
+            border-color: #76B900;
+        }
+
+    .header {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        padding: 20px 0;
+    }
+
+        .header h1 {
+            margin: 0;
+        }
+
+        .header input[type="search"] {
+            margin-left: auto;
+            padding: 10px;
+            border: 2px solid white;
+            border-radius: 50px;
+            background-color: black;
+            color: white;
+            outline: none;
+        }
+
+            .header input[type="search"]::placeholder {
+                color: white;
+            }
+
+    h2 {
+        color: white;
+    }
+
+    .header input[type="search"]::-webkit-search-decoration,
+    .header input[type="search"]::-webkit-search-cancel-button,
+    .header input[type="search"]::-webkit-search-results-button,
+    .header input[type="search"]::-webkit-search-results-decoration {
+        display: none;
+    }
+
+    .header input[type="search"]::-moz-search-decoration,
+    .header input[type="search"]::-moz-search-cancel-button,
+    .header input[type="search"]::-moz-search-results-button,
+    .header input[type="search"]::-moz-search-results-decoration {
+        display: none;
+    }
+
+    .card-body, .card {
+        background-color: #525050;
+        color: white;
+        padding: 20px 20px;
+        margin-bottom: 20px;
+    }
+
+
+    .btn, .btn-sm, .btn-outline-secondary {
+        color: white;
+    }
+
+    .list-group-item {
+        background-color: #525050;
+        color: white;
+    }
+
+
+
+    .footer {
+        background-color: #2D2D2D;
+        color: #fff;
+        padding: 20px;
+    }
+
+        .footer h5 {
+            margin-bottom: 20px;
+        }
+
+        .footer a {
+            color: #fff;
+            text-decoration: none;
+        }
+
+            .footer a:hover {
+                color: #ccc;
+            }
+
+
+
+    .prod-title {
+        color: white;
+        padding: 20px;
+        font-size: 50px;
+        font-family: Arial, sans-serif;
+    }
+
+    .card-body, .card {
+        background-color: #525050;
+        color: white;
+        padding: 20px 20px;
+        margin-bottom: 20px;
+        border-radius: 10px
+    }
+
+    .btn-outline-secondary {
+        background-color: grey;
+        color: white;
+        box-shadow: 3px 4px 3px rgba(0, 0, 0, 0.2);
+    }
+
+    .viewModalText {
+        color: white;
+    }
+
+    .viewModalTitle {
+        color: white;
+        font-weight: bold;
+    }
+
+    .viewModalSeller {
+        color: white;
+        text-decoration: underline;
+    }
+
+        .viewModalSeller:hover {
+            cursor: pointer;
+        }
+</style>

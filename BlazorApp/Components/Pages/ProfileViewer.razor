@@ -1,0 +1,209 @@
+﻿@page "/profileviewer/{UserId}"
+@using Npgsql;
+@inject LoginState LoginInfo
+@inject NavigationManager NavManager
+
+<div class="grid-container">
+    <div class="column1">
+        <h1 id="profileName">@CurrentUser.FirstName @CurrentUser.LastName</h1>
+        <hr id="nameUnderline" />
+        <div id="descriptionBox">
+            <p>@CurrentUser.Description</p>
+        </div>
+        @if (editDescPressed)
+        {
+            sellingCardsLimit = 0;
+            <div class="modal" tabindex="-1" style="display:block;" id="descModal">
+                <div class="modal-dialog">
+                    <div class="modal-content" style="background-color: #282829;">
+                        <div class="modal-header">
+                            <h5 class="modal-title" style="color: white;">Edit Description:</h5>
+                        </div>
+                        <div class="modal-body">
+                            <div>
+                                <textarea class="description-infi" rows="4" cols="50" @bind="writtenDescription"></textarea>
+                            </div>
+                            <button type="button" class="save-btn" @onclick="SaveAndCloseModal"> Save </button>
+                            <button type="button" class="close-btn" @onclick="CancelAndCloseModal"> Cancel </button>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        }
+        <hr id="descriptionUnderline" />
+        @if (LoginInfo.UserLoggedIn)
+        {
+            if (LoginInfo.ProfileId.ToString() == UserId)
+            {
+                <button @onclick="EditDescription" class="editDescription">EDIT</button>
+            }
+        }
+
+        <h1 id="sellingTitle">SELLING</h1>
+        <div id="selling">
+            <br />
+            @foreach (var product in productList)
+            {
+                if (sellingCardsLimit <= 2)                         
+                {
+                    sellingCardsLimit++;
+                    <SellingCards SellingProduct="product"></SellingCards>
+                    <p></p>
+                    if (sellingCardsLimit == 3)
+                    {
+                        <button @onclick="RedirectToProducts" id="seeMoreButton">
+                            <p>See More</p>
+                        </button>
+                    }
+                }
+                else
+                {
+                    break;
+                }
+            }
+            <br />
+        </div>
+    </div>
+    <div class="column2">
+        <div id="profilePictureContainer">
+            <img src="/testprofilepicture.png" id="profilePicture" />
+        </div>
+        <p id="infoText">Joined: @CurrentUser.Joined Location: @CurrentUser.Location</p>
+        <button id="chatButton" class="button">
+            <p>CHAT</p>
+        </button>
+        <button id="reportButton" class="button--report">
+            <p>REPORT</p>
+        </button>
+        <h1 id="repTitle">REPUTATION</h1>
+        <div class="star-rating">
+            @for (int i = 1; i <= 5; i++)
+            {
+                <span style="@(i <= CurrentUser.Reputation ? "color: gold;" : "color: #ccc;")" class="star">&#9733;</span>
+            }
+        </div>
+    </div>
+</div>
+<body id="pageBody">
+</body>
+
+
+
+@code {
+    [Parameter]
+    public string UserId { get; set; }
+    private string primaryKeyColumn;
+    private bool editDescPressed = false;
+    private string writtenDescription = "";
+   
+
+    private int sellingCardsLimit = 0;
+
+    UserClasses.UserProfiles CurrentUser = new UserClasses.UserProfiles();
+
+    private string connectionString = "Host=ep-purple-star-a20n8auz.eu-central-1.aws.neon.tech;Port=5432;Username=techvendo69;Password=qVyZgOJ36HtK;Database=TechVendo;SslMode=Require;";
+
+    private NpgsqlConnection connection;
+
+    public List<ProductClassLibrary.ProductClass> productList = new List<ProductClassLibrary.ProductClass>();
+
+    protected override void OnInitialized()
+    {
+        base.OnInitialized();
+        connection = new NpgsqlConnection(connectionString);
+
+        try
+        {
+            connection.Open();
+
+            string SelectSQL = $"SELECT * FROM userprofiles WHERE id = {UserId}";
+            using (NpgsqlCommand command = new NpgsqlCommand(SelectSQL, connection))
+            {
+                using (NpgsqlDataReader reader = command.ExecuteReader())
+                {
+                    while (reader.Read())
+                    {
+                        CurrentUser.FirstName = reader["firstname"].ToString();
+                        CurrentUser.LastName = reader["lastname"].ToString();
+                        CurrentUser.Description = reader["description"].ToString();
+                        CurrentUser.Joined = reader["joined"].ToString();
+                        CurrentUser.Location = reader["location"].ToString();
+                        CurrentUser.ProfileId = (int)reader["id"];
+                        CurrentUser.Reputation = (int)reader["reputation"];
+
+
+                    }
+                }
+            }
+            SelectSQL = $"SELECT * FROM products WHERE seller_id = {CurrentUser.ProfileId};";
+            using (NpgsqlCommand command = new NpgsqlCommand(SelectSQL, connection))
+            {
+                using (NpgsqlDataReader reader = command.ExecuteReader())
+                {
+                    while (reader.Read())
+                    {
+                        ProductClassLibrary.ProductClass product = new ProductClassLibrary.ProductClass
+                            {
+                                Price = (int)reader["price"],
+                                EANNumber = reader["ean_number"].ToString(),
+                                Brand = reader["brand"].ToString(),
+                                Model = reader["model"].ToString(),
+                                Series = reader["series"].ToString(),
+                                ProductID = (int)reader["product_id"]
+
+                            };
+                        productList.Add(product);
+                    }
+                }
+            }
+            DateTime datetimeValue = DateTime.Parse(CurrentUser.Joined);
+            CurrentUser.Joined = datetimeValue.ToString("dd-MM-yyyy");
+        }
+        finally
+        {
+            if (connection.State == System.Data.ConnectionState.Open)
+            {
+                connection.Close();
+            }
+        }
+    }
+    private void RedirectToProducts()
+    {
+        NavManager.NavigateTo($"/products");
+    }
+
+    private void EditDescription()
+    {
+        editDescPressed = true;
+        writtenDescription = CurrentUser.Description;
+    }
+
+    private void CancelAndCloseModal()
+    {
+        editDescPressed = false;
+    }
+
+    private void SaveAndCloseModal()
+    {
+        string insertSQL = $"UPDATE userprofiles SET description = '{writtenDescription}' WHERE id = {UserId}";
+        connection.Open();
+
+        try
+        {
+            using (NpgsqlCommand command = new NpgsqlCommand(insertSQL, connection))
+            {
+                command.ExecuteNonQuery();
+            }
+        }
+        finally
+        {
+            if (connection.State == System.Data.ConnectionState.Open)
+            {
+                connection.Close();
+            }
+        }
+        editDescPressed = false;
+        NavManager.NavigateTo(NavManager.Uri, true);
+    }
+}
+
